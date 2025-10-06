@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FutureMe | Learn skills for your dream job</title>
+
+<!-- jsPDF for certificate generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Icons (feather) -->
+<script src="https://unpkg.com/feather-icons"></script>
+
+<style>
+  /* ========== PALETTE & TYPOGRAPHY ========== */
+  :root{
+    --blue:#007bff;
+    --coral:#ff6b6b;
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --muted:#556b78;
+    --glass: rgba(255,255,255,0.85);
+    --radius:14px;
+    --shadow: 0 10px 30px rgba(17,24,39,0.06);
+    --accent-gradient: linear-gradient(90deg,var(--blue),var(--coral));
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter, "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg,#f7fbff 0%, var(--bg) 100%);
+    color:#09212b;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ========== HEADER ========== */
+  header{
+    position:fixed;left:0;right:0;top:0;height:72px;padding:12px 28px;
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    background: rgba(255,255,255,0.8);backdrop-filter: blur(6px);
+    box-shadow:0 6px 18px rgba(10,20,30,0.04);z-index:1200;
+    border-bottom:1px solid rgba(10,20,30,0.03);
+  }
+  .brand{display:flex;gap:10px;align-items:center}
+  .logo {
+    width:44px;height:44px;border-radius:10px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.08)
+  }
+  .brand h1{font-size:1.05rem;margin:0;color:var(--blue);letter-spacing:0.2px}
+  .brand .slogan{font-size:0.78rem;color:var(--muted)}
+  nav{display:flex;gap:10px;align-items:center}
+  nav a{color:var(--blue);text-decoration:none;font-weight:600;padding:8px 12px;border-radius:10px;transition:all .18s}
+  nav a:hover{background:rgba(0,123,255,0.06)}
+  .nav-cta{background:var(--accent-gradient);color:white;padding:8px 14px;border-radius:10px;font-weight:700;box-shadow:0 8px 20px rgba(0,123,255,0.08)}
+  @media (max-width:720px){ nav a{display:none} .nav-cta{display:inline-flex} }
+
+  /* ========== LAYOUT ========== */
+  .container{max-width:1180px;margin:110px auto;padding:0 20px}
+  .grid{display:grid;gap:18px}
+  .two-col{grid-template-columns:1fr 420px}
+  @media (max-width:980px){ .two-col{grid-template-columns:1fr} .hero-right{order:-1} }
+
+  /* ========== HERO ========== */
+  .hero{
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.92));
+    border-radius:18px;padding:36px;border:1px solid rgba(10,20,30,0.03);
+    box-shadow: var(--shadow);
+    display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center;
+  }
+  .hero-left h2{font-size:2.1rem;margin:0 0 12px;color:#072033;line-height:1.08}
+  .hero-left p{margin:0 0 18px;color:var(--muted);font-size:1rem}
+  .ctas{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{padding:12px 18px;border-radius:999px;border:0;cursor:pointer;font-weight:700}
+  .btn.primary{background:var(--accent-gradient);color:white;box-shadow:0 10px 30px rgba(0,123,255,0.08)}
+  .btn.ghost{background:transparent;border:2px solid rgba(0,123,255,0.08);color:var(--blue)}
+  .hero-right{background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));padding:18px;border-radius:12px;box-shadow:0 8px 18px rgba(10,20,30,0.04)}
+  .hero-visual{display:flex;gap:12px;align-items:center}
+  .hero-visual img{width:80px;height:80px;border-radius:12px;object-fit:cover;box-shadow:0 12px 30px rgba(0,0,0,0.06)}
+  .hero-tag{font-weight:700;color:var(--muted);font-size:0.95rem}
+
+  /* ========== HIGHLIGHTS ROW ========== */
+  .highlights{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .pill{background:white;padding:10px 12px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.04);display:flex;gap:10px;align-items:center;color:var(--muted)}
+  .pill svg{opacity:0.9}
+
+  /* ========== SECTIONS ========== */
+  section.card{background:var(--card);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(10,20,30,0.03)}
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .section-title h3{margin:0;color:#0b2933}
+  .small-muted{color:var(--muted);font-size:0.92rem}
+
+  /* ========== SUBSCRIPTION CARDS ========== */
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  .plan{padding:18px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbfcff);border:1px solid rgba(0,0,0,0.04);box-shadow:0 10px 30px rgba(0,0,0,0.04)}
+  .plan.pop {border:2px solid rgba(255,107,107,0.16);transform:scale(1.02)}
+  .price{font-size:1.6rem;font-weight:800;color:#072033}
+  .plan-features{margin-top:12px;color:var(--muted);font-size:0.95rem}
+  .plan .choose{margin-top:14px}
+
+  /* ========== CONTRIBUTOR FORM ========== */
+  .form-row{display:flex;gap:10px}
+  .form-row .col{flex:1}
+  input[type="text"], input[type="email"], textarea, select {
+    width:100%;padding:12px;border-radius:10px;border:1px solid #e6eef9;background:#fbfdff;
+  }
+  textarea{min-height:100px;resize:vertical}
+  .file-row{display:flex;gap:10px;align-items:center}
+  .file-label{font-size:0.9rem;color:var(--muted)}
+
+  /* ========== DASHBOARD ========== */
+  .dashboard-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:28px;
+  margin-top:24px;
+  justify-content:center;
+}
+.course-card {
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  border-radius:16px;
+  padding:20px;
+  border:1px solid rgba(0,0,0,0.05);
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.course-card:hover {
+  transform:translateY(-4px);
+  box-shadow:0 14px 36px rgba(0,0,0,0.08);
+}
+.course-thumb {
+  width:90px;
+  height:90px;
+  border-radius:12px;
+  object-fit:cover;
+}
+
+  .course-card{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:14px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 8px 20px rgba(10,20,30,0.04);display:flex;gap:12px;align-items:flex-start}
+  .course-thumb{width:76px;height:76px;border-radius:10px;flex-shrink:0;object-fit:cover;background:#eef7ff;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+  .course-info h4{margin:0 0 6px;font-size:1.05rem;color:#05222b}
+  .course-info p{margin:0;color:var(--muted);font-size:0.92rem}
+  .course-actions{margin-left:auto;display:flex;flex-direction:column;gap:8px}
+  .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#f0f8ff,#fff0f0);font-weight:700;color:var(--muted);font-size:0.82rem}
+
+  /* ========== FOOTER ========== */
+  footer{margin-top:30px;text-align:center;padding:28px 10px;color:var(--muted);font-size:0.9rem}
+
+  /* small responsive tweaks */
+  @media (max-width: 768px) {
+  .register-container {
+    flex-direction: column;
+    padding: 30px 20px;
+    margin: 40px 20px;
+    text-align: center;
+  }
+
+  .register-container h2 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+  }
+
+  .register-container small {
+    position: static;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .register-form {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .register-form input {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .register-btn,
+  .login-link {
+    width: 100%;
+    max-width: 350px;
+  }
+}
+
+</style>
+</head>
+<body>
+  <header id="siteHeader">
+    <div class="brand">
+      <div class="logo">FM</div>
+      <div>
+        <h1>FutureMe</h1>
+        <div class="slogan">Skills that land jobs • Earn as you teach</div>
+      </div>
+    </div>
+
+    <nav>
+      <a href="#" onclick="navigate('home')">Home</a>
+      <a href="#" onclick="navigate('dashboard')">Dashboard</a>
+      <a href="#" onclick="navigate('plans')">Plans</a>
+      <a href="#" onclick="navigate('contribute')">Contribute</a>
+      <a href="#" onclick="navigate('register')">Register</a>
+      <a class="nav-cta" href="#" onclick="navigate('register')">Get Started</a>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- HERO -->
+    <section id="home" class="hero">
+      <div class="hero-left">
+        <h2>Learn new skills, share your knowledge, and earn from your passion.</h2>
+        <p>FutureMe makes learning practical skills easy and gives contributors a simple way to earn from their expertise. Join thousands of learners and creators building real career-ready portfolios.</p>
+
+        <div class="ctas">
+          <button class="btn primary" onclick="navigate('register')">Start Learning</button>
+          <button class="btn ghost" onclick="navigate('contribute')">Become a Contributor</button>
+          <button class="btn" onclick="navigate('plans')">View Plans</button>
+        </div>
+
+        <div class="highlights" style="margin-top:18px">
+          <div class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2v20" stroke="#007bff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>Project-first lessons</strong><div style="font-size:0.86rem;color:var(--muted)">Build real projects</div></div></div>
+          <div class="pill"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" stroke="#ff6b6b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>Earn 10% commission</strong><div style="font-size:0.86rem;color:var(--muted)">For contributors</div></div></div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-visual">
+          <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=900&q=60" alt="students learning">
+          <div>
+            <div class="hero-tag">What's inside</div>
+            <h3 style="margin:6px 0 6px;color:#05222b">Certificates • Live demos • Contributor earnings</h3>
+            <div style="color:var(--muted)">Curated learning paths, downloadable materials, and visibility for contributors.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANS SECTION -->
+    <section id="plans" class="card" style="margin-top:18px;display:none">
+      <div class="section-title">
+        <h3>Choose a plan</h3>
+        <div class="small-muted">Monthly plans — cancel anytime</div>
+      </div>
+
+      <div class="plans">
+        <div class="plan">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="font-weight:800;font-size:1.05rem;color:#072033">Basic</div>
+              <div class="small-muted" style="margin-top:6px">Standard learning materials & certificates</div>
+            </div>
+            <div style="text-align:right">
+              <div class="price">$10<span style="font-size:0.9rem;color:var(--muted);font-weight:600">/month</span></div>
+            </div>
+          </div>
+          <div class="plan-features">
+            • Access to core lessons<br>• Downloadable PDFs<br>• Certificate of completion
+          </div>
+          <div class="choose">
+            <button class="btn primary" onclick="selectPlan('basic',10)">Choose Basic</button>
+          </div>
+        </div>
+
+        <div class="plan pop">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <div style="display:flex;gap:8px;align-items:center"><span style="background:linear-gradient(90deg,#ff9b9b,#ffd6d6);padding:6px 8px;border-radius:8px;font-weight:700;color:#7a1a1a">Most Popular</span></div>
+              <div style="font-weight:800;font-size:1.05rem;color:#072033;margin-top:8px">Pro</div>
+              <div class="small-muted" style="margin-top:6px">Everything in Basic + premium lessons</div>
+            </div>
+            <div style="text-align:right">
+              <div class="price">$20<span style="font-size:0.9rem;color:var(--muted);font-weight:600">/month</span></div>
+            </div>
+          </div>
+          <div class="plan-features">
+            • Premium lessons & tutorials<br>• Featured listing for contributors (Pro only)<br>• Priority support
+          </div>
+          <div class="choose">
+            <button class="btn primary" onclick="selectPlan('pro',20)">Choose Pro</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTRIBUTOR SECTION -->
+    <section id="contribute" class="card" style="margin-top:18px;display:none">
+      <div class="section-title">
+        <h3>Become a Contributor</h3>
+        <div class="small-muted">Share your knowledge, upload a demo PDF, and earn 10% commission on subscribed lesson views.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:18px">
+        <div>
+          <div style="margin-bottom:12px;color:var(--muted)">Complete the form below and upload a short demo PDF (sample lesson or syllabus). We’ll review and publish your lesson — contributors receive <strong>10% commission</strong> for every subscribed learner who takes their lesson.</div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <input id="contribName" type="text" placeholder="Full name">
+            <input id="contribEmail" type="email" placeholder="Email address">
+            <input id="contribTitle" type="text" placeholder="Lesson title (e.g. 'Intro to UI Design')">
+            <select id="contribCategory" style="padding:12px;border-radius:10px;border:1px solid #e6eef9;background:#fbfdff">
+              <option value="">Select category</option>
+              <option value="Programming">Programming</option>
+              <option value="Creative">Creative</option>
+              <option value="Career">Career</option>
+            </select>
+            <textarea id="contribDesc" placeholder="Short lesson description (1-3 lines)"></textarea>
+
+            <div class="file-row">
+              <input id="contribFile" type="file" accept="application/pdf">
+              <div style="display:flex;flex-direction:column">
+                <div class="file-label">Upload demo PDF</div>
+                <div id="fileHint" class="small-muted" style="font-size:0.86rem">Max 10MB. We only accept PDF samples.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px">
+              <button class="btn primary" onclick="submitContributor()">Submit for review</button>
+              <button class="btn ghost" onclick="resetContributorForm()">Clear</button>
+            </div>
+
+            <div id="contribMsg" style="display:none;padding:10px;border-radius:10px;background:#eef9f6;color:#075a44"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="background:linear-gradient(180deg,#fff,#fff8f8);padding:14px;border-radius:12px;border:1px solid rgba(255,107,107,0.06)">
+            <div style="font-weight:700;color:#7a1a1a">Contributor perks</div>
+            <ul style="color:var(--muted);margin-top:8px">
+              <li>10% commission per subscribed lesson view</li>
+              <li>Featured placement for Pro contributors</li>
+              <li>Dashboard analytics (coming soon)</li>
+            </ul>
+            <div style="margin-top:10px;color:var(--muted)">By submitting you agree to our simple review process. This prototype simulates uploads locally in your browser.</div>
+          </div>
+
+          <div style="margin-top:12px" class="section-title"><h4>Your submissions</h4><div class="small-muted">Recent demo uploads</div></div>
+          <div id="submissions" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGISTER -->
+    <section id="register" class="card" style="margin-top:18px;display:none">
+      <div class="section-title">
+        <h3>Create your account</h3>
+        <div class="small-muted">For learners & contributors</div>
+      </div>
+      <div style="max-width:640px">
+        <input id="regName" placeholder="Full name" style="margin-bottom:10px">
+        <input id="regEmail" placeholder="Email address" style="margin-bottom:10px">
+        <input id="regPassword" placeholder="Create password" type="password" style="margin-bottom:12px">
+        <div style="display:flex;gap:10px">
+          <button class="btn primary" onclick="handleRegister()">Register</button>
+          <button class="btn ghost" onclick="navigate('login')">Have an account? Login</button>
+        </div>
+        <div id="regSuccess" style="display:none;margin-top:10px;background:#e9fff4;padding:8px;border-radius:8px;color:#045a3c">Registration saved — please login.</div>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section id="login" class="card" style="margin-top:18px;display:none">
+      <div class="section-title">
+        <h3>Login</h3>
+        <div class="small-muted">Welcome back — continue learning</div>
+      </div>
+      <div style="max-width:640px">
+        <input id="loginEmail" placeholder="Email address" style="margin-bottom:10px">
+        <input id="loginPassword" placeholder="Password" type="password" style="margin-bottom:12px">
+        <div style="display:flex;gap:10px">
+          <button class="btn primary" onclick="handleLogin()">Login</button>
+          <button class="btn ghost" onclick="navigate('register')">Create account</button>
+        </div>
+        <div id="loginSuccess" style="display:none;margin-top:10px;background:#e9fff4;padding:8px;border-radius:8px;color:#045a3c">Login successful — redirecting…</div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="card" style="margin-top:18px;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <h3>Dashboard</h3>
+          <div class="small-muted">Welcome back, <strong id="userName">Student</strong></div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="min-width:220px">
+            <div style="font-size:0.9rem;color:var(--muted);margin-bottom:6px;font-weight:600">Overall Progress</div>
+            <div style="height:16px;background:linear-gradient(90deg,#eef6ff,#fff6f6);border-radius:999px;overflow:hidden;border:1px solid rgba(10,20,30,0.03)">
+              <div id="progressFill" style="height:100%;width:0;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:12px">0%</div>
+            </div>
+          </div>
+          <div id="subStatus" style="text-align:right"></div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:12px">
+        <h4>Recommended lessons</h4>
+        <div class="small-muted">Pick up where you left off</div>
+      </div>
+
+      <div class="dashboard-grid" id="coursesGrid">
+        <!-- Cards generated by JS -->
+      </div>
+
+      <div style="margin-top:14px" id="recommendBox" class="card" style="display:none"></div>
+    </section>
+
+    <footer>
+      © 2025 FutureMe — Learn skills for your dream job · Built as a working prototype
+    </footer>
+
+  </main>
+
+<script>
+/* =========================
+   DATA (lessons & counts)
+   - Using same categories as before, but each lesson now has a thumbnail
+   ========================= */
+const CATEGORIES = [
+  { key:'Programming', short:'prog', lessons:[
+    { title:'HTML Fundamentals', id:'pQN-pnXPaVg', img:'https://images.unsplash.com/photo-1526378728558-4fe8d851f1a6?auto=format&fit=crop&w=800&q=60' },
+    { title:'CSS Layout & Design', id:'1Rs2ND1ryYc', img:'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=60' },
+    { title:'JavaScript Basics', id:'W6NZfCO5SIk', img:'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=60' },
+  ]},
+  { key:'Creative', short:'creative', lessons:[
+    { title:'Graphic Design Basics', id:'rT1kD2bE9xk', img:'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=800&q=60' },
+    { title:'Video Editing Essentials', id:'2Vv-BfVoq4g', img:'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=60' },
+  ]},
+  { key:'Career', short:'career', lessons:[
+    { title:'Digital Marketing Basics', id:'3sQY8Q3QmJ0', img:'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=60' },
+    { title:'Personal Branding & Communication', id:'6fYwK1Q4vTQ', img:'https://images.unsplash.com/photo-1555992336-03a23c6e1b1b?auto=format&fit=crop&w=800&q=60' },
+    { title:'Freelancing & Remote Work Essentials', id:'8-6G8fKkK6E', img:'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=60' },
+  ]}
+];
+
+const TOTAL_LESSONS = CATEGORIES.reduce((sum,cat)=> sum + cat.lessons.length, 0);
+
+/* =========================
+   STORAGE KEYS & USER HELPERS
+   ========================= */
+const STORAGE_KEY = 'futureme_user_v5';
+
+function getUser(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e){ return {}; }
+}
+function saveUser(u){ localStorage.setItem(STORAGE_KEY, JSON.stringify(u||{})); }
+
+/* =========================
+   NAVIGATION & HEADER HIDING
+   ========================= */
+function navigate(section){
+  document.querySelectorAll('main > section').forEach(s=> s.style.display='none');
+  const el = document.getElementById(section);
+  if(el) el.style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if(section === 'dashboard') renderDashboard();
+  if(section === 'plans') renderPlans(); // ensure plans visible
+}
+let lastScroll = 0;
+const header = document.getElementById('siteHeader');
+window.addEventListener('scroll', ()=>{
+  const cur = window.scrollY || 0;
+  if(cur > lastScroll && cur > 80) header.style.transform = 'translateY(-120%)'; else header.style.transform='';
+  lastScroll = cur;
+});
+
+/* =========================
+   REGISTER / LOGIN / SUBSCRIBE (plan selection)
+   ========================= */
+function handleRegister(){
+  const name = (document.getElementById('regName')||{}).value || '';
+  const email = (document.getElementById('regEmail')||{}).value || '';
+  const pass = (document.getElementById('regPassword')||{}).value || '';
+  if(!name || !email || !pass){ alert('Fill all fields'); return; }
+  const user = { name, email, pass, subscription: null, subscribed:false, completed:[], contributor:false };
+  saveUser(user);
+  document.getElementById('regSuccess').style.display='block';
+  setTimeout(()=> navigate('login'),1000);
+}
+
+function handleLogin(){
+  const email = (document.getElementById('loginEmail')||{}).value || '';
+  const pass = (document.getElementById('loginPassword')||{}).value || '';
+  const user = getUser();
+  if(user.email === email && user.pass === pass){
+    document.getElementById('loginSuccess').style.display='block';
+    document.getElementById('userName').innerText = user.name || 'Student';
+    setTimeout(()=> navigate('dashboard'),900);
+    updateProgressUI();
+  } else {
+    alert('Incorrect credentials — register first or check your email/password.');
+  }
+}
+
+/* Plan selection simulation */
+function selectPlan(plan,price){
+  const user = getUser();
+  if(!user || !user.email){ if(confirm('Please register/login to choose a plan. Go to register?')) navigate('register'); return; }
+  user.subscription = { plan, price, since: (new Date()).toISOString() };
+  user.subscribed = true;
+  saveUser(user);
+  alert(`Plan selected: ${plan.toUpperCase()} — $${price}/month (simulated).`);
+  updateProgressUI();
+  navigate('dashboard');
+}
+
+/* =========================
+   PROGRESS / COMPLETION / CERT
+   ========================= */
+function isSubscribed(){ const u = getUser(); return !!(u && u.subscribed); }
+
+function completeLesson(categoryKey, lessonTitle){
+  const user = getUser();
+  if(!user || !user.email){ alert('Please register and login first.'); navigate('register'); return; }
+  if(!user.subscribed){ if(confirm('You need an active subscription to complete lessons. View plans?')) navigate('plans'); return; }
+
+  user.completed = user.completed || [];
+  if(!user.completed.includes(lessonTitle)){
+    user.completed.push(lessonTitle);
+    saveUser(user);
+    updateProgressUI();
+  }
+  generateCertificate(lessonTitle);
+}
+
+function updateProgressUI(){
+  const user = getUser();
+  const done = (user.completed || []).length;
+  const pct = Math.round((done / TOTAL_LESSONS) * 100);
+  const fill = document.getElementById('progressFill');
+  if(fill){ fill.style.width = pct + '%'; fill.textContent = pct + '%'; }
+  const name = user.name || 'Student';
+  document.getElementById('userName').innerText = name;
+  const status = document.getElementById('subStatus');
+  if(user.subscribed){
+    status.innerHTML = `<div style="font-weight:700;color:var(--muted)">${user.subscription.plan.toUpperCase()} • $${user.subscription.price}/mo</div><div style="font-size:0.85rem;color:var(--muted)">${new Date(user.subscription.since).toLocaleDateString()}</div>`;
+  } else {
+    status.innerHTML = `<div style="color:var(--muted)">Not subscribed</div>`;
+  }
+}
+
+/* certificate via jsPDF */
+function generateCertificate(courseName){
+  const { jsPDF } = window.jspdf;
+  const user = getUser();
+  const doc = new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+
+  doc.setFillColor(255,250,250);
+  doc.rect(0,0,w,h,'F');
+
+  doc.setDrawColor(0,123,255);
+  doc.setLineWidth(5);
+  doc.rect(36,36,w-72,h-72);
+
+  doc.setFontSize(34);
+  doc.setTextColor(20,40,80);
+  doc.setFont('helvetica','bold');
+  doc.text('Certificate of Completion', w/2, 140, {align:'center'});
+
+  doc.setFontSize(20);
+  doc.setFont('helvetica','normal');
+  doc.text(`This certifies that`, w/2, 188, {align:'center'});
+  doc.setFontSize(26);
+  doc.setFont('helvetica','bold');
+  doc.text(user.name || 'Student', w/2, 230, {align:'center'});
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica','normal');
+  doc.text(`has completed the lesson: ${courseName}`, w/2, 258, {align:'center'});
+  doc.text(`Issued by FutureMe — ${new Date().toLocaleDateString()}`, w/2, h - 90, {align:'center'});
+
+  const filename = `FutureMe_${courseName.replace(/[^\w]+/g,'_')}.pdf`;
+  doc.save(filename);
+}
+
+/* =========================
+   RECOMMENDED & GOTO
+   ========================= */
+function findNextLesson(){
+  const user = getUser();
+  const completed = new Set(user.completed || []);
+  for(const cat of CATEGORIES){
+    for(const lesson of cat.lessons){
+      if(!completed.has(lesson.title)) return {category:cat, lesson};
+    }
+  }
+  return null;
+}
+function gotoLesson(categoryShort, index){
+  const el = document.getElementById(`${categoryShort}-${index}`);
+  if(el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.animate([{transform:'translateY(-6px)'},{transform:'translateY(0)'}],{duration:420}); }
+}
+
+/* =========================
+   CONTRIBUTOR FORM (local simulation)
+   ========================= */
+function resetContributorForm(){
+  document.getElementById('contribName').value='';
+  document.getElementById('contribEmail').value='';
+  document.getElementById('contribTitle').value='';
+  document.getElementById('contribDesc').value='';
+  document.getElementById('contribCategory').value='';
+  document.getElementById('contribFile').value='';
+  document.getElementById('contribMsg').style.display='none';
+}
+
+function submitContributor(){
+  const name = (document.getElementById('contribName')||{}).value.trim();
+  const email = (document.getElementById('contribEmail')||{}).value.trim();
+  const title = (document.getElementById('contribTitle')||{}).value.trim();
+  const desc = (document.getElementById('contribDesc')||{}).value.trim();
+  const category = (document.getElementById('contribCategory')||{}).value;
+  const fileInput = document.getElementById('contribFile');
+
+  if(!name || !email || !title || !desc || !category){ alert('Please fill all fields'); return; }
+  if(!fileInput.files || !fileInput.files[0]){ alert('Please upload a demo PDF'); return; }
+
+  const file = fileInput.files[0];
+  if(file.size > 10 * 1024 * 1024){ alert('File too large (max 10MB)'); return; }
+  if(file.type !== 'application/pdf'){ alert('Please upload a PDF'); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataUrl = e.target.result; // base64 pdf preview (keeps locally in storage)
+    const subs = JSON.parse(localStorage.getItem('futureme_submissions_v1')||'[]');
+    const entry = { id: Date.now(), name, email, title, desc, category, fileName: file.name, fileDataUrl: dataUrl, status:'pending', earned:0 };
+    subs.unshift(entry);
+    localStorage.setItem('futureme_submissions_v1', JSON.stringify(subs));
+    showContributorMsg('Submission received — we will review and publish your lesson. (Simulated)', true);
+    renderSubmissions();
+    resetContributorForm();
+  };
+  reader.readAsDataURL(file);
+}
+function showContributorMsg(txt, success){
+  const el = document.getElementById('contribMsg');
+  el.style.display='';
+  el.style.background = success ? '#e9fff4' : '#fff2f0';
+  el.style.color = success ? '#045a3c' : '#7a1a1a';
+  el.textContent = txt;
+}
+
+/* Display contributor submissions */
+function renderSubmissions(){
+  const box = document.getElementById('submissions');
+  box.innerHTML = '';
+  const subs = JSON.parse(localStorage.getItem('futureme_submissions_v1')||'[]');
+  if(subs.length===0){ box.innerHTML = '<div class="small-muted">No submissions yet.</div>'; return; }
+  subs.slice(0,6).forEach(s=>{
+    const item = document.createElement('div');
+    item.style.display='flex';item.style.justifyContent='space-between';item.style.alignItems='center';item.style.padding='8px';item.style.borderRadius='8px';item.style.background='#fff';
+    item.style.border='1px solid rgba(0,0,0,0.03)';
+    item.innerHTML = `<div><div style="font-weight:700">${s.title}</div><div style="color:var(--muted);font-size:0.9rem">${s.category} • ${s.name}</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="${s.fileDataUrl}" download="${s.fileName}" class="btn ghost" style="padding:8px 10px">Download</a>
+        <div class="tag" style="background:linear-gradient(90deg,#fff,#fff6f6);">Status: ${s.status}</div>
+      </div>`;
+    box.appendChild(item);
+  });
+}
+
+/* =========================
+   RENDER DASHBOARD / LESSON CARDS
+   ========================= */
+function renderDashboard(){
+  const grid = document.getElementById('coursesGrid');
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    cat.lessons.forEach((lesson, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'course-card';
+      card.innerHTML = `
+        <img class="course-thumb" src="${lesson.img}" alt="${lesson.title}">
+        <div class="course-info">
+          <h4>${lesson.title}</h4>
+          <p>${cat.key} • ${lesson.title.split(' ').slice(0,3).join(' ')}...</p>
+          <div style="margin-top:8px"><span class="tag">${cat.key}</span></div>
+        </div>
+        <div class="course-actions">
+          <button class="btn ghost" onclick="openModalEmbed('https://www.youtube.com/embed/${lesson.id}')">Watch</button>
+          <button class="btn primary" onclick="completeLesson('${cat.key}','${lesson.title}')">Get Certificate</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+  updateProgressUI();
+  renderSubmissions();
+}
+
+/* =========================
+   UTILS: Modal embed & go to lesson
+   ========================= */
+function openModalEmbed(src){
+  // simple modal embed
+  let modal = document.getElementById('embedModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id='embedModal';
+    modal.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1600;display:flex;align-items:center;justify-content:center';
+    modal.innerHTML = `<div style="width:90%;max-width:900px;background:white;border-radius:12px;padding:12px;position:relative">
+      <button onclick="closeModalEmbed()" style="position:absolute;right:12px;top:8px;border:0;background:transparent;font-size:22px;cursor:pointer">✕</button>
+      <div id="embedContainer" style="width:100%;height:0;padding-bottom:56%;position:relative"></div></div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById('embedContainer').innerHTML = `<iframe src="${src}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:8px" allowfullscreen></iframe>`;
+  modal.style.display='flex';
+}
+function closeModalEmbed(){ const modal = document.getElementById('embedModal'); if(modal) modal.style.display='none'; }
+
+/* =========================
+   RESET PROGRESS (dev/demo)
+   ========================= */
+function resetProgress(){
+  if(!confirm('Reset your progress and completed lessons?')) return;
+  const user = getUser();
+  user.completed = [];
+  saveUser(user);
+  updateProgressUI();
+  alert('Progress reset.');
+}
+
+/* =========================
+   BOOT: initialize UI
+   ========================= */
+(function boot(){
+  // default to home
+  navigate('home');
+
+  // fill userName if logged in
+  const user = getUser();
+  if(user && user.name){ document.getElementById('userName').innerText = user.name; }
+  renderSubmissions();
+  renderDashboard();
+
+  // accessibility: close modal with Esc
+  window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModalEmbed(); });
+
+  // feather icons
+  if(window.feather) feather.replace();
+})();
+</script>
+
+</body>
+</html>
